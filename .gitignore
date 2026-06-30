@@ -1,0 +1,39 @@
+# Virtual environment
+.venv/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE settings
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# Databases and Logs
+*.db
+*.db-journal
+*.log
+bot.log
+musicbot.db
+bot.db
+bot_database.db
+
+# Bot temporary downloads
+downloads/
+temp_downloads/
+
+# Local configuration / secrets
+.env
+
+# Windows executables (local ffmpeg)
+ffmpeg.exe
+ffprobe.exe
