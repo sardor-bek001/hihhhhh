@@ -29,6 +29,7 @@ from aiogram.types import (
     Message,
     CallbackQuery,
     FSInputFile,
+    ReplyKeyboardRemove,
 )
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.enums import ParseMode, ChatAction
@@ -760,6 +761,9 @@ def safe_handler(func):
 @safe_handler
 async def cmd_start(message: Message):
     await upsert_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
+    # Eski Reply Keyboard (avtosalon va boshqa botlar qoldirgan) ni o'chirish
+    remove_msg = await message.answer(".", reply_markup=ReplyKeyboardRemove())
+    await remove_msg.delete()
     text = (
         f"━━━━━━━━━━━━━━━━━━━━\n"
         f"  🎶 <b>MUSIQA BOT</b> 🎶\n"
@@ -1473,3 +1477,4 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Bot to'xtatildi.")
+        
