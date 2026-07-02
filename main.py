@@ -916,37 +916,28 @@ async def handle_text(message: Message):
         ig_match = INSTAGRAM_URL_REGEX.search(line)
         if ig_match:
             ig_id = ig_match.group(1)
-            status_msg_mp3 = await message.answer("📸 Instagram havola aniqlandi.\n🎧 MP3 tayyorlanmoqda... ⏳")
-            lock = get_user_lock(user_id)
-            async with lock:
-                await process_download(user_id, ig_id, "mp3", status_msg_mp3, source="ig")
-            status_msg_mp4 = await message.answer("🎬 MP4 tayyorlanmoqda... ⏳")
-            async with lock:
-                await process_download(user_id, ig_id, "mp4", status_msg_mp4, source="ig")
+            await message.answer(
+                "📸 Instagram havola topildi. Qaysi formatda yuklab beray?",
+                reply_markup=format_choice_kb(ig_id, source="ig"),
+            )
             continue
 
         video_id = extract_video_id_from_url(line)
         if video_id:
-            status_msg_mp3 = await message.answer("🔗 YouTube havola aniqlandi.\n🎧 MP3 tayyorlanmoqda... ⏳")
-            lock = get_user_lock(user_id)
-            async with lock:
-                await process_download(user_id, video_id, "mp3", status_msg_mp3, source="yt")
-            status_msg_mp4 = await message.answer("🎬 MP4 tayyorlanmoqda... ⏳")
-            async with lock:
-                await process_download(user_id, video_id, "mp4", status_msg_mp4, source="yt")
+            await message.answer(
+                "🔗 YouTube havola topildi. Qaysi formatda yuklab beray?",
+                reply_markup=format_choice_kb(video_id, source="yt"),
+            )
             continue
 
         # Boshqa har qanday URL havola (TikTok, Facebook, Likee, va h.k.)
         if line.lower().startswith(("http://", "https://")):
             url_hash = get_url_hash(line)
             await save_url_mapping(url_hash, line)
-            status_msg_mp3 = await message.answer("🔗 Havola aniqlandi.\n🎧 MP3 tayyorlanmoqda... ⏳")
-            lock = get_user_lock(user_id)
-            async with lock:
-                await process_download(user_id, url_hash, "mp3", status_msg_mp3, source="url")
-            status_msg_mp4 = await message.answer("🎬 MP4 tayyorlanmoqda... ⏳")
-            async with lock:
-                await process_download(user_id, url_hash, "mp4", status_msg_mp4, source="url")
+            await message.answer(
+                "🔗 Havola aniqlandi. Qaysi formatda yuklab beray?",
+                reply_markup=format_choice_kb(url_hash, source="url"),
+            )
             continue
 
         # Havola bo'lmasa qidiruv deb hisoblaymiz
@@ -992,17 +983,12 @@ async def handle_search_query(message: Message, query: str) -> None:
 @safe_handler
 async def cb_select_result(callback: CallbackQuery):
     video_id = callback.data.split(":", 1)[1]
-    user_id = callback.from_user.id
-    await callback.answer("Boshlandi ⏳")
-    
-    status_msg_mp3 = await callback.message.edit_text("✅ <b>Tanlandi!</b>\n\n🎧 MP3 tayyorlanmoqda... ⏳")
-    lock = get_user_lock(user_id)
-    async with lock:
-        await process_download(user_id, video_id, "mp3", status_msg_mp3, source="yt")
-    
-    status_msg_mp4 = await callback.message.answer("🎬 MP4 tayyorlanmoqda... ⏳")
-    async with lock:
-        await process_download(user_id, video_id, "mp4", status_msg_mp4, source="yt")
+    await callback.message.edit_text(
+        "✅ <b>Tanlandi!</b>\n\n"
+        "📥 Qaysi formatda yuklab beray?",
+        reply_markup=format_choice_kb(video_id),
+    )
+    await callback.answer()
 
 
 # =====================================================================================
@@ -1039,22 +1025,17 @@ async def handle_video_file(message: Message):
     if message.caption and not is_generic_title(message.caption):
         original_title = message.caption.strip()
 
-    # Avtomatik ravishda videoni qaytarish va audiosini ajratib jo'natish
-    status_msg_mp4 = await message.reply("🎬 Video yuborilmoqda... ⏳")
-    try:
-        if file_type == "video":
-            await bot.send_video(chat_id=user_id, video=file_id)
-        elif file_type == "video_note":
-            await bot.send_video_note(chat_id=user_id, video_note=file_id)
-        else:
-            await bot.send_document(chat_id=user_id, document=file_id)
-        await status_msg_mp4.delete()
-    except Exception as e:
-        logger.exception("Video yuborishda xatolik: %s", e)
-        await status_msg_mp4.edit_text("❌ Videoni yuborishda xatolik yuz berdi.")
-        
-    status_msg_mp3 = await message.answer("🎧 Videodan MP3 musiqa ajratib olinmoqda... ⏳")
-    await process_video_to_mp3(user_id, file_id, original_title, status_msg_mp3)
+    # Fayl ma'lumotlarini bazaga saqlash (hash orqali)
+    file_hash = get_url_hash(file_id + file_type)
+    payload = f"file|{file_type}|{file_id}|{original_title}"
+    await save_url_mapping(file_hash, payload)
+
+    await message.reply(
+        f"📥 <b>Video qabul qilindi!</b>\n\n"
+        f"🎵 Sarlavha: <i>{original_title}</i>\n\n"
+        f"Quyidagilardan birini tanlang 👇",
+        reply_markup=video_options_kb(file_hash)
+    )
 
 
 @router.callback_query(F.data.startswith("vidopt:"))
