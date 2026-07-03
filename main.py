@@ -472,7 +472,6 @@ def base_ydl_opts() -> dict:
         "continuedl": False,        # Eskirgan partial fayldan davom ettirmaslik (416 xatosini oldini oladi)
         "noresizebuffer": True,     # Buffer o'lchamini o'zgartirmaslik
         "socket_timeout": 30,       # Ulanish vaqt limiti
-        "js_runtimes": ["node"],    # YouTube signature decryption uchun JS runtime ko'rsatish
     }
     if COOKIES_FILE and os.path.exists(COOKIES_FILE):
         opts["cookiefile"] = COOKIES_FILE
@@ -1028,7 +1027,7 @@ async def handle_search_query(message: Message, query: str) -> None:
     await bot.send_chat_action(message.chat.id, ChatAction.TYPING)
 
     try:
-        results = await search_youtube(query, SEARCH_RESULTS_LIMIT)
+        results = await search_youtube(query, 1)
     except Exception as e:
         logger.exception("Qidirishda xatolik: %s", e)
         await log_error(message.from_user.id, repr(e))
@@ -1046,18 +1045,23 @@ async def handle_search_query(message: Message, query: str) -> None:
         )
         return
 
-    SEARCH_CACHE.setdefault(message.from_user.id, {})
-    for r in results:
-        SEARCH_CACHE[message.from_user.id][r["id"]] = r
-
+    video_id = results[0]["id"]
+    title = results[0]["title"]
+    
     await searching_msg.edit_text(
-        f"━━━━━━━━━━━━━━━━━━━━\n"
-        f"  🔍 <b>NATIJALAR</b>\n"
-        f"━━━━━━━━━━━━━━━━━━━━\n\n"
-        f"🎵 <b>{query}</b> bo'yicha:\n"
-        f"👇 Birini tanlang:",
-        reply_markup=search_results_kb(message.from_user.id, results),
+        f"✅ <b>Topildi!</b>\n\n"
+        f"🎧 <b>{title}</b> tayyorlanmoqda... ⏳"
     )
+    
+    lock = get_user_lock(message.from_user.id)
+    async with lock:
+        success = await process_download(message.from_user.id, video_id, "mp3", searching_msg, source="yt")
+
+    if success:
+        await message.answer(
+            "🎬 Videoni ham yuboraymi?",
+            reply_markup=ask_video_kb(video_id, source="yt")
+        )
 
 
 # =====================================================================================
