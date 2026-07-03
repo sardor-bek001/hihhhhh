@@ -121,20 +121,17 @@ def get_ffmpeg_path() -> str:
 # tv_embedded va android_creator clientlari PO Token talab qilmaydi va video uchun yaxshi ishlaydi.
 YTDLP_EXTRACTOR_ARGS_PRIMARY = {
     "youtube": {
-        "player_client": ["tv_embedded", "mweb"],
-        "formats": ["missing_pot"],
+        "player_client": ["default", "-android_sdkless"],
     }
 }
 YTDLP_EXTRACTOR_ARGS_FALLBACK = {
     "youtube": {
-        "player_client": ["web_embedded", "android_vr"],
-        "formats": ["missing_pot"],
+        "player_client": ["web_embedded", "web", "tv"],
     }
 }
 YTDLP_EXTRACTOR_ARGS_EXTRA = {
     "youtube": {
         "player_client": ["ios", "android"],
-        "formats": ["missing_pot"],
     }
 }
 # COOKIES_FILE: agar yt-dlp "Sign in to confirm you're not a bot" deb xato bersa,
