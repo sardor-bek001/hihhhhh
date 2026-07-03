@@ -4,9 +4,9 @@ FROM python:3.12-slim
 # Terminalda buffering-ni o'chirib qo'yamiz (loglarni darhol ko'rish uchun)
 ENV PYTHONUNBUFFERED=1
 
-# Tizim paketlarini yangilaymiz va FFmpeg o'rnatamiz
+# Tizim paketlarini yangilaymiz va FFmpeg hamda Node.js o'rnatamiz (yt-dlp uchun JS runtime)
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg && \
+    apt-get install -y --no-install-recommends ffmpeg nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 

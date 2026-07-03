@@ -475,6 +475,7 @@ def base_ydl_opts() -> dict:
         "continuedl": False,        # Eskirgan partial fayldan davom ettirmaslik (416 xatosini oldini oladi)
         "noresizebuffer": True,     # Buffer o'lchamini o'zgartirmaslik
         "socket_timeout": 30,       # Ulanish vaqt limiti
+        "js_runtimes": ["node"],    # YouTube signature decryption uchun JS runtime ko'rsatish
     }
     if COOKIES_FILE and os.path.exists(COOKIES_FILE):
         opts["cookiefile"] = COOKIES_FILE
